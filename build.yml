@@ -1,0 +1,40 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install system deps
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-pip python3-setuptools git zip unzip openjdk-17-jdk libffi-dev libssl-dev
+        pip install --upgrade pip Cython virtualenv
+
+    - name: Install buildozer & deps
+      run: |
+        pip install buildozer fpdf2 kivy kivy-garden
+        pip install kivy_garden.matplotlib
+
+    - name: Initialize buildozer
+      run: buildozer init || true
+
+    - name: Build APK (debug)
+      run: buildozer -v android debug
+
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ultimatebudget-apk
+        path: bin/*.apk
